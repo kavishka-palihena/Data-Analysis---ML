@@ -1,0 +1,111 @@
+---
+title: "Multiple Correspondence Analysis and Factor Analysis for mixed data"
+output: html_notebook
+---
+
+
+```{r}
+library("FactoMineR")
+library("factoextra")
+```
+
+
+```{r}
+# import dataset
+library(readr)
+MCA_df <- read_csv("MCA_df.csv", 
+    col_types = cols(weeks_left = col_character()))
+df = data.frame(MCA_df)
+View(df)
+```
+
+
+```{r}
+str(df)
+```
+* There is only 'duration' variable we have as a quantitative variable, all others are qualitative variables.
+* 10 variables with 300153 observations.
+
+```{r}
+# compute the FAMD
+```
+
+
+```{r}
+res.famd <- FAMD(df, graph = FALSE)
+```
+
+
+```{r}
+```
+```{r}
+# The proportion of variances retained by the different dimensions using eigen values
+eig.val <- get_eigenvalue(res.famd)
+eig.val
+```
+```{r}
+fviz_screeplot(res.famd)
+```
+* only 11.28% of variance(inertia) explained by the first 2 dimensions
+* still let's go ahead and analyse the first 2 dimensions
+```{r}
+# Plot of variables
+fviz_famd_var(res.famd, repel = TRUE)
+```
+
+```{r}
+# Contribution to the first dimension
+fviz_contrib(res.famd, "var", axes = 1)
+# Contribution to the second dimension
+fviz_contrib(res.famd, "var", axes = 2)
+```
+```{r}
+# taking the results for only qualitative variables
+quali.var <- get_famd_var(res.famd, "quali.var")
+```
+```{r}
+# plots for qualitative variables
+fviz_famd_var(res.famd, "quali.var", col.var = "contrib",
+              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"))
+```
+```{r}
+#fviz_famd_ind(res.famd, col.ind = "cos2",
+#gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+#repel = FALSE, geom = "point")
+```
+
+
+```{r}
+set.seed(42)
+res.famd <- FAMD(df[sample(nrow(df), 20000), ], ncp = 16, graph = FALSE)
+eig.val <- get_eigenvalue(res.famd)
+eig.val
+```
+```{r}
+results <- res.famd$ind$coord
+#dist_results = dist(results, method = 'euclidean')
+#results
+fviz_nbclust(results, FUNcluster=hkmeans, k.max = 8) 
+```
+
+```{r}
+#res.hcpc <- HCPC (res.famd, graph = FALSE, nb.clust = 3)
+```
+
+```{r}
+# Individuals facor map
+#fviz_cluster(res.hcpc, geom = "point", main = "Factor map")
+```
+```{r}
+res.hkmeans = hkmeans(results, k = 3)
+```
+```{r}
+fviz_cluster(res.hkmeans, geom = "point", main = "Factor map")
+```
+
+```{r}
+library(scatterplot3d)
+scatterplot3d(results[,1:3], pch=20, color=rainbow(3)[res.hkmeans$cluster])
+
+```
+
